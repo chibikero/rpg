@@ -319,9 +319,9 @@ class Game:
             "開発者チビケロ：",
             "プレイしてくれてありがとう！",
             "次の作品も開発中だよ！",
-            "",
-            "作ってほしい物があったら",
-            "ＬＩＮＥしてね" 
+            "作ってほしいものがあったら",
+            "LINEまたは",
+            "chibikero0812@Gmail.comまで!" 
         ]
         self.ad_timer = 0
 
@@ -482,7 +482,7 @@ class Game:
             if self.current_enemy.update_death_animation(): return
             else: self.end_battle(won=True); return
         if self.battle_turn == "player":
-            if pyxel.btnp(pyxel.KEY_UP) or pyxel.btnp(pyxel.KEY_DOWN): self.battle_command_index = 1 - self.battle_command_index
+            if pyxel.btnp(pyxel.KEY_UP) or pyxel.btnp(pyxel.KEY_DOWN) or pyxel.btn(pyxel.GAMEPAD1_BUTTON_DPAD_UP) or pyxel.btn(pyxel.GAMEPAD1_BUTTON_DPAD_DOWN): self.battle_command_index = 1 - self.battle_command_index
             if pyxel.btnp(pyxel.KEY_Z) or pyxel.btnp(pyxel.KEY_RETURN) or pyxel.btnp(pyxel.GAMEPAD1_BUTTON_A):
                 if self.battle_command_index == 0:
                     dmg = self.player.attack_power + random.randint(-1, 2)
