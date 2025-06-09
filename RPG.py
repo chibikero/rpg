@@ -22,6 +22,10 @@ SCENE_BATTLE = 3
 SCENE_GAMEOVER = 4
 SCENE_VICTORY = 5
 SCENE_CLEAR = 6
+SCENE_AD = 7 
+
+# 広告表示時間（フレーム数）
+AD_DISPLAY_TIME = 1800 # ★変更: 60fps * 60秒 = 1分
 
 # マップデータ (0: 通路, 1: 壁, 2: NPC, 3: エンカウント, 4: クリアタイル)
 MAP_DATA_RAW = [
@@ -63,6 +67,7 @@ MAP_DATA_RAW = [
     [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1],
     [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1],
     [1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3],
+    [1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1],
     [1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1],
     [1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1],
     [1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1],
@@ -296,14 +301,30 @@ class Game:
             "影の王に奪われた。",
             "闇が大地を覆い始める...",
             "",
-            "英雄が立ち上がり",
+            "ああもう終わりだ",
+            "その時英雄が立ち上がり",
             "呪われた迷宮へ向かう。",
             "",
-            "あなたがその英雄だ。"
+            "あなたがその英雄だ。",
+            "",
+            "あなたは世界を変えるために",
+            "今立ち上がる！",
+            "果たして世界を救うことは",
+            "できるのか！？",
+            "健闘を祈る..." 
         ]
-        self.opening_current_line_block = 0
-        self.opening_timer = 0
-        self.opening_line_display_time = 150
+
+        # 広告メッセージとタイマー
+        self.ad_message_lines = [ # ★変更
+            "開発者チビケロ：",
+            "プレイしてくれてありがとう！",
+            "次の作品も開発中だよ！",
+            "",
+            "作ってほしい物があったら",
+            "ＬＩＮＥしてね" 
+        ]
+        self.ad_timer = 0
+
 
         self.camera_x = float(self.player.x - SCREEN_WIDTH / 2)
         self.camera_y = float(self.player.y - SCREEN_HEIGHT / 2)
@@ -424,29 +445,16 @@ class Game:
         elif self.scene == SCENE_GAMEOVER: self.update_gameover()
         elif self.scene == SCENE_VICTORY: self.update_victory()
         elif self.scene == SCENE_CLEAR: self.update_clear_scene()
+        elif self.scene == SCENE_AD: self.update_ad_scene() 
 
     def update_title_scene(self):
         if pyxel.btnp(pyxel.KEY_Z) or pyxel.btnp(pyxel.KEY_RETURN) or pyxel.btnp(pyxel.GAMEPAD1_BUTTON_A):
             self.scene = SCENE_OPENING
-            self.opening_current_line_block = 0
-            self.opening_timer = self.opening_line_display_time
-            # pyxel.playm(1, loop=True)
 
     def update_opening_scene(self):
-        self.opening_timer -= 1
-        # エラー箇所：末尾のコロンを削除
-        pressed_action_key = pyxel.btnp(pyxel.KEY_Z) or pyxel.btnp(pyxel.KEY_RETURN) or pyxel.btnp(pyxel.GAMEPAD1_BUTTON_A)
-        if self.opening_timer <= 0 or pressed_action_key:
-            lines_in_block = 0; start_idx_for_block_check = self.opening_current_line_block * 3
-            for i in range(start_idx_for_block_check, len(self.opening_message_lines)):
-                lines_in_block += 1
-                if self.opening_message_lines[i] == "" or lines_in_block >=3 :
-                    if self.opening_message_lines[i] == "" and i+1 < len(self.opening_message_lines) and self.opening_message_lines[i+1] == "": break
-                    elif self.opening_message_lines[i] != "" and lines_in_block < 3: continue
-                    break
-            self.opening_current_line_block +=1
-            if start_idx_for_block_check + lines_in_block >= len(self.opening_message_lines): self.scene = SCENE_MAP
-            else: self.opening_timer = self.opening_line_display_time
+        # ユーザーがZキーまたはAボタンを押したらマップシーンへ遷移
+        if pyxel.btnp(pyxel.KEY_Z) or pyxel.btnp(pyxel.KEY_RETURN) or pyxel.btnp(pyxel.GAMEPAD1_BUTTON_A):
+            self.scene = SCENE_MAP
 
     def update_map(self):
         if pyxel.btnp(pyxel.KEY_Q): pyxel.quit()
@@ -504,7 +512,10 @@ class Game:
 
     def update_gameover(self):
         self.battle_sub_scene_timer -= 1
-        if self.battle_sub_scene_timer <= 0 or pyxel.btnp(pyxel.KEY_Z) or pyxel.btnp(pyxel.GAMEPAD1_BUTTON_A): pyxel.quit()
+        # ゲームオーバー後は広告シーンへ
+        if self.battle_sub_scene_timer <= 0 or pyxel.btnp(pyxel.KEY_Z) or pyxel.btnp(pyxel.GAMEPAD1_BUTTON_A): 
+            self.scene = SCENE_AD
+            self.ad_timer = AD_DISPLAY_TIME
 
     def update_victory(self):
         self.battle_sub_scene_timer -= 1
@@ -518,13 +529,24 @@ class Game:
                 self.game_clear_phase = 1; self.final_clear_display_timer = 240
         elif self.game_clear_phase == 1:
             self.final_clear_display_timer -= 1
+            # ゲームクリア後は広告シーンへ
             if self.final_clear_display_timer <= 0 or pyxel.btnp(pyxel.KEY_Z) or pyxel.btnp(pyxel.GAMEPAD1_BUTTON_A):
-                pyxel.quit()
+                self.scene = SCENE_AD
+                self.ad_timer = AD_DISPLAY_TIME
+
+    # 広告シーンの更新
+    def update_ad_scene(self):
+        self.ad_timer -= 1
+        if self.ad_timer <= 0 or pyxel.btnp(pyxel.KEY_Z) or pyxel.btnp(pyxel.KEY_RETURN) or pyxel.btnp(pyxel.GAMEPAD1_BUTTON_A):
+            self.scene = SCENE_TITLE # タイトル画面に戻る
+            self.player = Player(TILE_SIZE * 1, TILE_SIZE * 1) # プレイヤー位置を初期化
+            self.player.hp = self.player.max_hp # HPも回復
+            self.enemies_defeated_count = 0 # 撃破数もリセット
 
     def draw_title_scene(self):
         pyxel.camera(0,0); pyxel.cls(1)
         title_text = "陽石の呪い"; start_text = "Z または Enter キーで開始" 
-        # measure メソッドを使わず、固定幅フォントの長さを基に計算 (半角文字基準)
+        # len(text) * pyxel.FONT_WIDTH は半角文字基準の幅なので、全角文字を含むと中央寄せがずれる可能性がある
         title_w = len(title_text) * pyxel.FONT_WIDTH
         start_w = len(start_text) * pyxel.FONT_WIDTH
         
@@ -534,24 +556,20 @@ class Game:
         if pyxel.frame_count%40<20: pyxel.text(SCREEN_WIDTH/2-start_w/2,SCREEN_HEIGHT/2+20,start_text,7, font=self.loaded_custom_font)
 
     def draw_opening_scene(self):
-        pyxel.camera(0,0); pyxel.cls(0); start_y=50; lines_per_block=3; current_y=start_y
-        start_idx_for_display=self.opening_current_line_block*lines_per_block; lines_shown_in_block=0
-        for i in range(start_idx_for_display,len(self.opening_message_lines)):
-            if lines_shown_in_block>=lines_per_block and self.opening_message_lines[i-1]=="": break
-            if lines_shown_in_block>=5: break
-            line_text=self.opening_message_lines[i]
-            if line_text: 
-                # measure メソッドを使わず、固定幅フォントの長さを基に計算 (半角文字基準)
-                text_w = len(line_text) * pyxel.FONT_WIDTH
-                pyxel.text(SCREEN_WIDTH/2-text_w/2,current_y,line_text,7, font=self.loaded_custom_font) 
-            current_y+=10; lines_shown_in_block+=1
-            if line_text=="" and not (i+1<len(self.opening_message_lines) and self.opening_message_lines[i+1]==""): break
-        is_last_block=(start_idx_for_display+lines_shown_in_block>=len(self.opening_message_lines))
-        if pyxel.frame_count%30<15:
-            continue_text="- Zキーで開始 -" if is_last_block else "- Zキーで次へ -" 
-            # measure メソッドを使わず、固定幅フォントの長さを基に計算 (半角文字基準)
+        pyxel.camera(0,0); pyxel.cls(0); 
+        current_y = 50 # 開始Y座標
+
+        # 全てのメッセージ行を表示
+        for line_text in self.opening_message_lines:
+            text_w = len(line_text) * pyxel.FONT_WIDTH # 半角文字基準の幅
+            pyxel.text(SCREEN_WIDTH/2 - text_w/2, current_y, line_text, 7, font=self.loaded_custom_font)
+            current_y += 10 # 次の行へ移動
+
+        # 「Zキーで開始」の点滅表示
+        if pyxel.frame_count % 30 < 15:
+            continue_text = "- Zキーで開始 -"
             continue_w = len(continue_text) * pyxel.FONT_WIDTH
-            pyxel.text(SCREEN_WIDTH/2-continue_w/2,SCREEN_HEIGHT-20,continue_text,8, font=self.loaded_custom_font) 
+            pyxel.text(SCREEN_WIDTH/2 - continue_w/2, SCREEN_HEIGHT - 20, continue_text, 8, font=self.loaded_custom_font)
 
     def draw_map_scene(self):
         pyxel.camera(int(self.camera_x), int(self.camera_y)); pyxel.cls(3)
@@ -579,7 +597,7 @@ class Game:
             elif self.current_enemy.visible: self.current_enemy.draw()
             if not self.current_enemy.is_dead:
                 e_hp_txt = f"{self.current_enemy.name} HP:{self.current_enemy.hp}/{self.current_enemy.max_hp}"
-                # measure メソッドを使わず、固定幅フォントの長さを基に計算 (半角文字基準)
+                # len(text) * pyxel.FONT_WIDTH は半角文字基準の幅なので、全角文字を含むと中央寄せがずれる可能性がある
                 e_hp_w = len(e_hp_txt) * pyxel.FONT_WIDTH
                 pyxel.text(self.current_enemy.x+self.current_enemy.sprite_w/2-e_hp_w/2,self.current_enemy.y-10,e_hp_txt,7, font=self.loaded_custom_font) 
         
@@ -596,14 +614,14 @@ class Game:
         msg_x,msg_y,msg_w,msg_h = 10,10,SCREEN_WIDTH-20,40
         pyxel.rect(msg_x,msg_y,msg_w,msg_h,0); pyxel.rectb(msg_x,msg_y,msg_w,msg_h,7)
         
-        # measure メソッドを使わず、固定幅フォントの長さを基に計算 (半角文字基準)
+        # len(text) * pyxel.FONT_WIDTH は半角文字基準の幅なので、全角文字を含むと中央寄せがずれる可能性がある
         msg_text_w = len(self.battle_message) * pyxel.FONT_WIDTH
         pyxel.text(msg_x+(msg_w-msg_text_w)/2,msg_y+(msg_h-pyxel.FONT_HEIGHT)/2+1,self.battle_message,7, font=self.loaded_custom_font) 
         for dt in self.damage_texts: dt.draw()
 
     def draw_gameover_scene(self):
         pyxel.camera(0,0); pyxel.cls(0)
-        # measure メソッドを使わず、固定幅フォントの長さを基に計算 (半角文字基準)
+        # len(text) * pyxel.FONT_WIDTH は半角文字基準の幅なので、全角文字を含むと中央寄せがずれる可能性がある
         go_text_w = len(self.battle_message) * pyxel.FONT_WIDTH
         pyxel.text(SCREEN_WIDTH/2-go_text_w/2,SCREEN_HEIGHT/2-4,self.battle_message,8, font=self.loaded_custom_font) 
 
@@ -611,7 +629,7 @@ class Game:
         self.draw_battle_scene(); pyxel.camera(0,0)
         vic_w,vic_h=160,25; vic_x,vic_y=(SCREEN_WIDTH-vic_w)/2,(SCREEN_HEIGHT-vic_h)/2-30
         pyxel.rect(vic_x,vic_y,vic_w,vic_h,0); pyxel.rectb(vic_x,vic_y,vic_w,vic_h,7)
-        # measure メソッドを使わず、固定幅フォントの長さを基に計算 (半角文字基準)
+        # len(text) * pyxel.FONT_WIDTH は半角文字基準の幅なので、全角文字を含むと中央寄せがずれる可能性がある
         vic_text_w = len(self.battle_message) * pyxel.FONT_WIDTH
         pyxel.text(vic_x+(vic_w-vic_text_w)/2,vic_y+(vic_h-pyxel.FONT_HEIGHT)/2+1,self.battle_message,10, font=self.loaded_custom_font) 
 
@@ -622,7 +640,7 @@ class Game:
             msg1 = "陽石の光が戻る！"; msg2 = "呪いは解かれた。" 
             msg3 = "再び平和が訪れた。"; msg4 = "(Zキーで次へ)" 
             
-            # measure メソッドを使わず、固定幅フォントの長さを基に計算 (半角文字基準)
+            # len(text) * pyxel.FONT_WIDTH は半角文字基準の幅なので、全角文字を含むと中央寄せがずれる可能性がある
             msg1_w = len(msg1) * pyxel.FONT_WIDTH
             msg2_w = len(msg2) * pyxel.FONT_WIDTH
             msg3_w = len(msg3) * pyxel.FONT_WIDTH
@@ -662,7 +680,7 @@ class Game:
                     current_x += TILE_SIZE 
 
             exit_msg = "- Zキーで終了 -"; 
-            # measure メソッドを使わず、固定幅フォントの長さを基に計算 (半角文字基準)
+            # len(text) * pyxel.FONT_WIDTH は半角文字基準の幅なので、全角文字を含むと中央寄せがずれる可能性がある
             exit_w = len(exit_msg) * pyxel.FONT_WIDTH
             if pyxel.frame_count%30<15: pyxel.text(SCREEN_WIDTH/2-exit_w/2,SCREEN_HEIGHT-30,exit_msg,8, font=self.loaded_custom_font) 
 
@@ -677,6 +695,27 @@ class Game:
                 pyxel.text(msg_x+5,msg_y+5+i*10,line,7, font=self.loaded_custom_font) 
             pyxel.camera(cam_x,cam_y)
 
+    # 広告シーンの描画
+    def draw_ad_scene(self):
+        pyxel.camera(0,0)
+        pyxel.cls(0) # 黒背景
+        
+        # 広告メッセージの描画
+        current_y = SCREEN_HEIGHT / 2 - (len(self.ad_message_lines) * 10) / 2 # 行数と行の高さ10で中央寄せ
+        for line in self.ad_message_lines:
+            # len(text) * pyxel.FONT_WIDTH は半角文字基準の幅なので、全角文字を含むと中央寄せがずれる可能性がある
+            text_w = len(line) * pyxel.FONT_WIDTH 
+            pyxel.text(SCREEN_WIDTH/2 - text_w/2, current_y, line, 7, font=self.loaded_custom_font)
+            current_y += 10 # 次の行へ
+
+        # "PRESS Z TO SKIP" の点滅表示
+        if pyxel.frame_count % 30 < 15:
+            skip_text = "- Zキーでスキップ -"
+            # len(text) * pyxel.FONT_WIDTH は半角文字基準の幅なので、全角文字を含むと中央寄せがずれる可能性がある
+            skip_w = len(skip_text) * pyxel.FONT_WIDTH
+            pyxel.text(SCREEN_WIDTH/2 - skip_w/2, SCREEN_HEIGHT - 20, skip_text, 8, font=self.loaded_custom_font)
+
+
     def draw(self):
         if self.scene == SCENE_TITLE: self.draw_title_scene()
         elif self.scene == SCENE_OPENING: self.draw_opening_scene()
@@ -685,6 +724,7 @@ class Game:
         elif self.scene == SCENE_GAMEOVER: self.draw_gameover_scene()
         elif self.scene == SCENE_VICTORY: self.draw_victory_scene()
         elif self.scene == SCENE_CLEAR: self.draw_clear_scene()
+        elif self.scene == SCENE_AD: self.draw_ad_scene() 
 
         if self.screen_flash_timer > 0 and pyxel.frame_count % 4 < 2:
             pyxel.rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 7)
