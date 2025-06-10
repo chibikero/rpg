@@ -25,9 +25,24 @@ SCENE_CLEAR = 6
 SCENE_AD = 7 
 
 # 広告表示時間（フレーム数）
-AD_DISPLAY_TIME = 1800 # ★変更: 60fps * 60秒 = 1分
+AD_DISPLAY_TIME = 3600 # 60fps * 60秒 = 1分
 
-# マップデータ (0: 通路, 1: 壁, 2: NPC, 3: エンカウント, 4: クリアタイル)
+# 隠し要素の定義
+# 隠しNPCのマップ座標 (タイル座標)
+SECRET_NPC_TILE_X = 48
+SECRET_NPC_TILE_Y = 21
+
+# 隠し宝箱のマップ座標 (タイル座標)
+SECRET_TREASURE_TILE_X = 25 
+SECRET_TREASURE_TILE_Y = 24 
+SECRET_TREASURE_POWER_BOOST = 5 # 隠し宝箱で上がる攻撃力
+
+# 裏ボスが必ず出現する固定タイル座標とタイルタイプ
+FIXED_BOSS_SPAWN_TILE_X = 47
+FIXED_BOSS_SPAWN_TILE_Y = 37 
+TILE_SECRET_BOSS_SPAWN = 5 # 新しいタイルタイプ定義
+
+# マップデータ (0: 通路, 1: 壁, 2: NPC, 3: エンカウント, 4: クリアタイル, 5: 裏ボス出現タイル)
 MAP_DATA_RAW = [
     [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
     [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,2,1,0,0,0,1,2,0,0,0,0,1],
@@ -66,7 +81,7 @@ MAP_DATA_RAW = [
     [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1], 
     [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1],
     [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1],
-    [1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3],
+    [1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,5,3], # TILE_SECRET_BOSS_SPAWN (5)を適用
     [1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1],
     [1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1],
     [1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1],
@@ -93,7 +108,7 @@ MAP_DATA_RAW = [
     [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1],
     [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1],
     [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1],
-    [1,1,1,1,1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,1,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,0,1,1,1],
     [1,1,1,1,1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,1,1],
     [1,1,1,1,1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,1,1],
     [1,1,1,1,1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,1,1],
@@ -184,8 +199,10 @@ class Player(GameObject):
         actual_dx, actual_dy = dx, dy
         if dx != 0 and dy != 0: actual_dx /= math.sqrt(2); actual_dy /= math.sqrt(2)
 
+        # 移動前のタイル位置
         prev_tile_x = int((self.x + self.sprite_w / 2) // TILE_SIZE)
         prev_tile_y = int((self.y + self.sprite_h / 2) // TILE_SIZE)
+
         try_x, try_y = self.x + actual_dx, self.y + actual_dy
         coll_offset = 2
 
@@ -195,6 +212,7 @@ class Player(GameObject):
             tile_x_to_check = int(check_x_edge // TILE_SIZE)
             tile_y1 = int((self.y + coll_offset) // TILE_SIZE)
             tile_y2 = int((self.y + self.sprite_h - 1 - coll_offset) // TILE_SIZE)
+            # 壁(1)は通過できない
             if not (0 <= tile_x_to_check < MAP_WIDTH_TILES and
                     0 <= tile_y1 < MAP_HEIGHT_TILES and 0 <= tile_y2 < MAP_HEIGHT_TILES and
                     game_map[tile_y1][tile_x_to_check] != 1 and
@@ -210,6 +228,7 @@ class Player(GameObject):
             tile_y_to_check = int(check_y_edge // TILE_SIZE)
             tile_x1 = int((self.x + coll_offset) // TILE_SIZE)
             tile_x2 = int((self.x + self.sprite_w - 1 - coll_offset) // TILE_SIZE)
+            # 壁(1)は通過できない
             if not (0 <= tile_y_to_check < MAP_HEIGHT_TILES and
                     0 <= tile_x1 < MAP_WIDTH_TILES and 0 <= tile_x2 < MAP_WIDTH_TILES and
                     game_map[tile_y_to_check][tile_x1] != 1 and
@@ -224,11 +243,34 @@ class Player(GameObject):
         
         current_tile_x = int((self.x + self.sprite_w / 2) // TILE_SIZE)
         current_tile_y = int((self.y + self.sprite_h / 2) // TILE_SIZE)
+        
+        # 隠し宝箱のチェック (タイルに入った瞬間)
+        if not game_instance.found_secret_treasure and \
+           current_tile_x == SECRET_TREASURE_TILE_X and \
+           current_tile_y == SECRET_TREASURE_TILE_Y:
+            
+            game_instance.found_secret_treasure = True
+            self.attack_power += SECRET_TREASURE_POWER_BOOST # 攻撃力アップ
+            game_instance.message_to_display = f"隠し宝箱を発見した！\n攻撃力が{SECRET_TREASURE_POWER_BOOST}上がった！"
+            game_instance.message_timer = 180 # メッセージを長めに表示
+            print(f"DEBUG: Secret Treasure found! Player Attack: {self.attack_power}")
+            game_instance.game_map_data[current_tile_y][current_tile_x] = 0 # 宝箱発見後は通常の通路に戻す
+
+        # ★変更: 裏ボス出現タイルのチェック (タイルに入った瞬間)
+        if not game_instance.defeated_secret_boss and \
+           game_map[current_tile_y][current_tile_x] == TILE_SECRET_BOSS_SPAWN:
+            
+            # 裏ボス戦開始
+            game_instance.start_battle(is_secret_boss=True)
+            # 裏ボスを倒すまでタイルタイプは5のままにしておく（踏みっぱなしになる）
+            # 倒したらend_battleで通路(0)に戻す。
+            
+        # 通常のタイルイベント (移動前のタイルから移動後のタイルへの変化をチェック)
         if (current_tile_x != prev_tile_x or current_tile_y != prev_tile_y):
              if 0 <= current_tile_y < MAP_HEIGHT_TILES and 0 <= current_tile_x < MAP_WIDTH_TILES:
                 tile_type_entered = game_map[current_tile_y][current_tile_x]
                 if tile_type_entered == 3 and random.random() < 0.25:
-                    game_instance.start_battle()
+                    game_instance.start_battle() # 通常エンカウント
                 elif tile_type_entered == 4:
                     game_instance.game_clear()
         self.update_animation()
@@ -246,12 +288,14 @@ class NPC(GameObject):
     def __init__(self, tile_x, tile_y, message): 
         super().__init__(tile_x * TILE_SIZE, tile_y * TILE_SIZE, 16, 0, TILE_SIZE, TILE_SIZE) # NPC sprite at (16,0)
         self.message = message
+        self.is_secret = False 
 
 class Enemy(GameObject):
-    def __init__(self, name, x, y, img_u, img_v, hp, attack):
+    def __init__(self, name, x, y, img_u, img_v, hp, attack, is_secret_boss=False): 
         super().__init__(x, y, img_u, img_v, TILE_SIZE * 2, TILE_SIZE * 2)
         self.name = name; self.max_hp = hp; self.hp = hp; self.attack_power = attack
         self.is_dead = False; self.is_hit_flash = 0; self.death_animation_timer = 0; self.visible = True
+        self.is_secret_boss = is_secret_boss 
     def take_damage(self, amount):
         self.hp -= amount; self.hp = max(0, self.hp)
         if self.hp <= 0: self.is_dead = True; self.death_animation_timer = 60
@@ -315,15 +359,20 @@ class Game:
         ]
 
         # 広告メッセージとタイマー
-        self.ad_message_lines = [ # ★変更
+        self.ad_message_lines = [ 
             "開発者チビケロ：",
             "プレイしてくれてありがとう！",
             "次の作品も開発中だよ！",
-            "作ってほしいものがあったら",
-            "LINEまたは",
-            "chibikero0812@Gmail.comまで!" 
+            "",
+            "作ってほしい物があったら",
+            "ＬＩＮＥしてね" 
         ]
         self.ad_timer = 0
+
+        # 隠し要素フラグ
+        self.found_secret_npc = False
+        self.found_secret_treasure = False 
+        self.defeated_secret_boss = False 
 
 
         self.camera_x = float(self.player.x - SCREEN_WIDTH / 2)
@@ -384,33 +433,55 @@ class Game:
         for r_idx, row in enumerate(self.game_map_data):
             for c_idx, tile_type in enumerate(row):
                 if tile_type == 2:
+                    message = "" 
+                    is_secret_npc = False 
+
                     if r_idx == 1 and c_idx == 38: message = "陽石への道は長く、危険に満ちている。\n幸運を祈る。"
                     elif r_idx == 4 and c_idx == 44: message = "この迷宮は複雑に入り組んでいる...\n多くの者がここで迷い失われた。"
                     elif r_idx == 8 and c_idx == 24: message = "影がこれらの広間に潜んでいる。\n常に警戒せよ。"
                     elif r_idx == 21 and c_idx == 1: message = "英雄よ！あなたの到着を待っていた。\n王国はあなたを必要としている。"
                     elif r_idx == 21 and c_idx == 38: message = "陽石...その力こそが我々の\n救済への鍵だ。"
-                    elif r_idx == 21 and c_idx == 48: message = "南への出口は強力な守護者に\n阻まれていると聞く。"
+                    elif r_idx == SECRET_NPC_TILE_Y and c_idx == SECRET_NPC_TILE_X: 
+                        message = "南への出口は強力な守護者に\n阻まれていると聞く。"
+                        is_secret_npc = True
                     elif r_idx == 32 and c_idx == 37: message = "終わりは近いぞ、英雄よ！\n陽石の力があなたを呼んでいる。" 
                     else: message = f"老いた旅人だ。\n旅には気をつけなさい。"
-                    self.npcs.append(NPC(c_idx, r_idx, message))
-                    self.game_map_data[r_idx][c_idx] = 0
 
-    def start_battle(self):
+                    new_npc = NPC(c_idx, r_idx, message)
+                    new_npc.is_secret = is_secret_npc 
+                    self.npcs.append(new_npc)
+                    self.game_map_data[r_idx][c_idx] = 0 # NPCのいる場所は通路にする
+
+
+    def start_battle(self, is_secret_boss=False): 
         self.scene = SCENE_BATTLE
         enemy_x = SCREEN_WIDTH/2-(TILE_SIZE*2)/2; enemy_y = SCREEN_HEIGHT/3-(TILE_SIZE*2)/2
         base_hp=10; base_attack=2; hp_inc=3; atk_inc=0.5
-        cur_hp = base_hp+self.enemies_defeated_count*hp_inc
-        cur_atk = base_attack+int(self.enemies_defeated_count*atk_inc); cur_atk=max(1,cur_atk)
-        enemy_lvl = self.enemies_defeated_count+1
-        enemy_u, enemy_v = 32, 0 # Enemy sprite from setup_assets
-        enemy_name = f"迷宮の霊 Lv.{enemy_lvl}" 
-        self.current_enemy = Enemy(enemy_name,enemy_x,enemy_y,enemy_u,enemy_v,cur_hp,cur_atk)
+        enemy_u, enemy_v = 32, 0 
+
+        if is_secret_boss: 
+            enemy_name = "隠しボス：冥府の番人" 
+            cur_hp = self.player.max_hp * 2 
+            cur_atk = self.player.attack_power + 5 
+            print("DEBUG: Secret Boss appeared!")
+        else:
+            cur_hp = base_hp+self.enemies_defeated_count*hp_inc
+            cur_atk = base_attack+int(self.enemies_defeated_count*atk_inc); cur_atk=max(1,cur_atk)
+            enemy_lvl = self.enemies_defeated_count+1
+            enemy_name = f"迷宮の霊 Lv.{enemy_lvl}" 
+            
+        self.current_enemy = Enemy(enemy_name,enemy_x,enemy_y,enemy_u,enemy_v,cur_hp,cur_atk, is_secret_boss=is_secret_boss) 
         self.battle_message=f"{self.current_enemy.name} が現れた！"; self.battle_command_index=0
         self.battle_turn="player"; self.damage_texts.clear()
         # pyxel.playm(0, loop=True)
 
     def end_battle(self, won=False):
         if won:
+            if self.current_enemy and self.current_enemy.is_secret_boss: 
+                self.defeated_secret_boss = True
+                print("DEBUG: Secret Boss defeated!")
+                # 裏ボスを倒したら、その出現タイルを通常の通路に戻す
+                self.game_map_data[FIXED_BOSS_SPAWN_TILE_Y][FIXED_BOSS_SPAWN_TILE_X] = 0
             self.scene=SCENE_VICTORY; self.battle_message=f"{self.current_enemy.name} は倒れた！" 
             self.battle_sub_scene_timer=120; self.enemies_defeated_count+=1
             print(f"DEBUG: Enemies defeated: {self.enemies_defeated_count}")
@@ -470,7 +541,11 @@ class Game:
                 for npc in self.npcs:
                     ncx, ncy = npc.x + npc.sprite_w / 2, npc.y + npc.sprite_h / 2
                     if (pcx - ncx)**2 + (pcy - ncy)**2 < (TILE_SIZE * 1.8)**2:
-                        self.message_to_display = npc.message; self.message_timer = 240; break
+                        self.message_to_display = npc.message; self.message_timer = 240
+                        if npc.is_secret: 
+                            self.found_secret_npc = True
+                            print("DEBUG: Secret NPC found!")
+                        break
         else:
             self.message_timer -= 1
             if self.message_timer <= 0 or pyxel.btnp(pyxel.KEY_Z) or pyxel.btnp(pyxel.GAMEPAD1_BUTTON_A):
@@ -482,7 +557,7 @@ class Game:
             if self.current_enemy.update_death_animation(): return
             else: self.end_battle(won=True); return
         if self.battle_turn == "player":
-            if pyxel.btnp(pyxel.KEY_UP) or pyxel.btnp(pyxel.KEY_DOWN) or pyxel.btn(pyxel.GAMEPAD1_BUTTON_DPAD_UP) or pyxel.btn(pyxel.GAMEPAD1_BUTTON_DPAD_DOWN): self.battle_command_index = 1 - self.battle_command_index
+            if pyxel.btnp(pyxel.KEY_UP) or pyxel.btnp(pyxel.KEY_DOWN): self.battle_command_index = 1 - self.battle_command_index
             if pyxel.btnp(pyxel.KEY_Z) or pyxel.btnp(pyxel.KEY_RETURN) or pyxel.btnp(pyxel.GAMEPAD1_BUTTON_A):
                 if self.battle_command_index == 0:
                     dmg = self.player.attack_power + random.randint(-1, 2)
@@ -542,6 +617,12 @@ class Game:
             self.player = Player(TILE_SIZE * 1, TILE_SIZE * 1) # プレイヤー位置を初期化
             self.player.hp = self.player.max_hp # HPも回復
             self.enemies_defeated_count = 0 # 撃破数もリセット
+            self.found_secret_npc = False 
+            self.found_secret_treasure = False 
+            self.defeated_secret_boss = False 
+            # 裏ボスの出現タイルを壁にリセット (次回のプレイで再度出現させるため)
+            self.game_map_data[FIXED_BOSS_SPAWN_TILE_Y][FIXED_BOSS_SPAWN_TILE_X] = TILE_SECRET_BOSS_SPAWN 
+
 
     def draw_title_scene(self):
         pyxel.camera(0,0); pyxel.cls(1)
@@ -581,6 +662,8 @@ class Game:
                 if 0 <= r < MAP_HEIGHT_TILES and 0 <= c < MAP_WIDTH_TILES:
                     tile_type = self.game_map_data[r][c]
                     if tile_type == 1: pyxel.blt(c*TILE_SIZE,r*TILE_SIZE,0,24,0,TILE_SIZE,TILE_SIZE,0) # Wall
+                    elif tile_type == TILE_SECRET_BOSS_SPAWN: # ★変更: 裏ボス出現タイルは壁と同じグラフィック
+                        pyxel.blt(c*TILE_SIZE,r*TILE_SIZE,0,24,0,TILE_SIZE,TILE_SIZE,0) # Wall
                     elif tile_type == 3: pyxel.rect(c*TILE_SIZE,r*TILE_SIZE,TILE_SIZE,TILE_SIZE,12) # Encounter
                     elif tile_type == 4: pyxel.blt(c*TILE_SIZE, r*TILE_SIZE, 0, 40, 0, TILE_SIZE, TILE_SIZE, 0) # Clear
         for npc in self.npcs: npc.draw()
@@ -707,6 +790,28 @@ class Game:
             text_w = len(line) * pyxel.FONT_WIDTH 
             pyxel.text(SCREEN_WIDTH/2 - text_w/2, current_y, line, 7, font=self.loaded_custom_font)
             current_y += 10 # 次の行へ
+
+        # 隠し要素発見時のメッセージ
+        # 隠しNPC
+        if self.found_secret_npc:
+            secret_npc_msg = "あなたは迷宮の秘密の１つを解き明かした！"
+            secret_npc_w = len(secret_npc_msg) * pyxel.FONT_WIDTH
+            pyxel.text(SCREEN_WIDTH/2 - secret_npc_w/2, current_y + 20, secret_npc_msg, 10, font=self.loaded_custom_font)
+            current_y += 10 # 次の隠しメッセージのためにY座標をずらす
+        
+        # 隠し宝箱
+        if self.found_secret_treasure:
+            secret_treasure_msg = "隠された力が、あなたに宿った！"
+            secret_treasure_w = len(secret_treasure_msg) * pyxel.FONT_WIDTH
+            pyxel.text(SCREEN_WIDTH/2 - secret_treasure_w/2, current_y + 30, secret_treasure_msg, 9, font=self.loaded_custom_font)
+            current_y += 10
+
+        # 隠しボス撃破
+        if self.defeated_secret_boss:
+            secret_boss_msg = "伝説の冥府の番人を打ち破った！"
+            secret_boss_w = len(secret_boss_msg) * pyxel.FONT_WIDTH
+            pyxel.text(SCREEN_WIDTH/2 - secret_boss_w/2, current_y + 40, secret_boss_msg, 11, font=self.loaded_custom_font)
+
 
         # "PRESS Z TO SKIP" の点滅表示
         if pyxel.frame_count % 30 < 15:
