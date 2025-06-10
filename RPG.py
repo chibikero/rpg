@@ -38,8 +38,8 @@ SECRET_TREASURE_TILE_Y = 24
 SECRET_TREASURE_POWER_BOOST = 5 # 隠し宝箱で上がる攻撃力
 
 # 裏ボスが必ず出現する固定タイル座標とタイルタイプ
-FIXED_BOSS_SPAWN_TILE_X = 47
-FIXED_BOSS_SPAWN_TILE_Y = 37 
+FIXED_BOSS_SPAWN_TILE_X = 0
+FIXED_BOSS_SPAWN_TILE_Y = 0 
 TILE_SECRET_BOSS_SPAWN = 5 # 新しいタイルタイプ定義
 
 # マップデータ (0: 通路, 1: 壁, 2: NPC, 3: エンカウント, 4: クリアタイル, 5: 裏ボス出現タイル)
@@ -102,14 +102,12 @@ MAP_DATA_RAW = [
     [1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1],
     [1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1],
     [1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1],
-    [1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1],
     [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1],
     [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1],
     [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1],
     [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1],
     [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1],
     [1,1,1,1,1,1,1,1,1,1,1,1,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,0,1,1,1],
-    [1,1,1,1,1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,1,1],
     [1,1,1,1,1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,1,1],
     [1,1,1,1,1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,1,1],
     [1,1,1,1,1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,1,1],
@@ -212,7 +210,7 @@ class Player(GameObject):
             tile_x_to_check = int(check_x_edge // TILE_SIZE)
             tile_y1 = int((self.y + coll_offset) // TILE_SIZE)
             tile_y2 = int((self.y + self.sprite_h - 1 - coll_offset) // TILE_SIZE)
-            # 壁(1)は通過できない
+            # 壁(1)は通過できない (タイルタイプ5は通過できる)
             if not (0 <= tile_x_to_check < MAP_WIDTH_TILES and
                     0 <= tile_y1 < MAP_HEIGHT_TILES and 0 <= tile_y2 < MAP_HEIGHT_TILES and
                     game_map[tile_y1][tile_x_to_check] != 1 and
@@ -228,7 +226,7 @@ class Player(GameObject):
             tile_y_to_check = int(check_y_edge // TILE_SIZE)
             tile_x1 = int((self.x + coll_offset) // TILE_SIZE)
             tile_x2 = int((self.x + self.sprite_w - 1 - coll_offset) // TILE_SIZE)
-            # 壁(1)は通過できない
+            # 壁(1)は通過できない (タイルタイプ5は通過できる)
             if not (0 <= tile_y_to_check < MAP_HEIGHT_TILES and
                     0 <= tile_x1 < MAP_WIDTH_TILES and 0 <= tile_x2 < MAP_WIDTH_TILES and
                     game_map[tile_y_to_check][tile_x1] != 1 and
@@ -257,7 +255,9 @@ class Player(GameObject):
             game_instance.game_map_data[current_tile_y][current_tile_x] = 0 # 宝箱発見後は通常の通路に戻す
 
         # ★変更: 裏ボス出現タイルのチェック (タイルに入った瞬間)
-        if not game_instance.defeated_secret_boss and \
+        if (current_tile_x != prev_tile_x or current_tile_y != prev_tile_y) and \
+           not game_instance.defeated_secret_boss and \
+           game_instance.found_secret_npc and \
            game_map[current_tile_y][current_tile_x] == TILE_SECRET_BOSS_SPAWN:
             
             # 裏ボス戦開始
@@ -662,8 +662,8 @@ class Game:
                 if 0 <= r < MAP_HEIGHT_TILES and 0 <= c < MAP_WIDTH_TILES:
                     tile_type = self.game_map_data[r][c]
                     if tile_type == 1: pyxel.blt(c*TILE_SIZE,r*TILE_SIZE,0,24,0,TILE_SIZE,TILE_SIZE,0) # Wall
-                    elif tile_type == TILE_SECRET_BOSS_SPAWN: # ★変更: 裏ボス出現タイルは壁と同じグラフィック
-                        pyxel.blt(c*TILE_SIZE,r*TILE_SIZE,0,24,0,TILE_SIZE,TILE_SIZE,0) # Wall
+                    elif tile_type == TILE_SECRET_BOSS_SPAWN: # ★変更: 裏ボス出現タイルも壁と同じグラフィック
+                        pyxel.blt(c*TILE_SIZE,r*TILE_SIZE,0,24,0,TILE_SIZE,TILE_SIZE,0) # Wall (見た目も壁と同じ)
                     elif tile_type == 3: pyxel.rect(c*TILE_SIZE,r*TILE_SIZE,TILE_SIZE,TILE_SIZE,12) # Encounter
                     elif tile_type == 4: pyxel.blt(c*TILE_SIZE, r*TILE_SIZE, 0, 40, 0, TILE_SIZE, TILE_SIZE, 0) # Clear
         for npc in self.npcs: npc.draw()
