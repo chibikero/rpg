@@ -531,7 +531,7 @@ class Game:
             self.scene = SCENE_OPENING
             # 通常開始時はタイムアタックモードではない
             self.is_time_attack_mode = False
-        elif pyxel.btnp(pyxel.KEY_X) or pyxel.btnp(pyxel.GAMEPAD1_BUTTON_Y): # Xキーでタイムアタック開始
+        elif pyxel.btnp(pyxel.KEY_X): # Xキーでタイムアタック開始
             self.scene = SCENE_OPENING
             self.is_time_attack_mode = True
             self.game_start_time = pyxel.frame_count # タイムアタック開始時間を記録
@@ -554,7 +554,6 @@ class Game:
                 pcx, pcy = self.player.x + self.player.sprite_w / 2, self.player.y + self.player.sprite_h / 2
                 for npc in self.npcs:
                     ncx, ncy = npc.x + npc.sprite_w / 2, npc.y + npc.sprite_h / 2
-                    # ppy is not defined -> pcy
                     if (pcx - ncx)**2 + (pcy - ncy)**2 < (TILE_SIZE * 1.8)**2: 
                         self.message_to_display = npc.message; self.message_timer = 240
                         if npc.is_secret: 
@@ -572,8 +571,9 @@ class Game:
             if self.current_enemy.update_death_animation(): return
             else: self.end_battle(won=True); return
         if self.battle_turn == "player":
-            if pyxel.btnp(pyxel.KEY_UP) or pyxel.btnp(pyxel.KEY_DOWN)or pyxel.btn(pyxel.GAMEPAD1_BUTTON_DPAD_DOWN) or pyxel.btn(pyxel.GAMEPAD1_BUTTON_DPAD_UP)
-: self.battle_command_index = 1 - self.battle_command_index
+            # 構文エラーを修正：if文の末尾にコロンを追加
+            if pyxel.btnp(pyxel.KEY_UP) or pyxel.btnp(pyxel.KEY_DOWN) or pyxel.btnp(pyxel.GAMEPAD1_BUTTON_DPAD_DOWN) or pyxel.btnp(pyxel.GAMEPAD1_BUTTON_DPAD_UP):
+                self.battle_command_index = 1 - self.battle_command_index
             if pyxel.btnp(pyxel.KEY_Z) or pyxel.btnp(pyxel.KEY_RETURN) or pyxel.btnp(pyxel.GAMEPAD1_BUTTON_A):
                 if self.battle_command_index == 0:
                     dmg = self.player.attack_power + random.randint(-1, 2)
@@ -824,7 +824,7 @@ class Game:
         # 空行もリストに追加し、描画時に色を指定しないことで背景色で表示させる
         if self.found_secret_npc:
             display_lines_data.append(("", 0)) # 空行
-            display_lines_data.append(("あなたは迷宮の秘密を知った！", 10)) # 緑
+            display_lines_data.append(("あなたは迷宮の秘密の１つを解き明かした！", 10)) # 緑
         
         if self.found_secret_treasure:
             display_lines_data.append(("", 0)) # 空行
