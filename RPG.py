@@ -43,7 +43,6 @@ FIXED_BOSS_SPAWN_TILE_Y = 37
 TILE_SECRET_BOSS_SPAWN = 5 # 新しいタイルタイプ定義
 
 # マップデータ (0: 通路, 1: 壁, 2: NPC, 3: エンカウント, 4: クリアタイル, 5: 裏ボス出現タイル)
-# ★★★ ご提示いただいた新しいMAP_DATA_RAWに差し替え済み ★★★
 MAP_DATA_RAW = [
     [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
     [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,2,1,0,0,0,1,2,0,0,0,0,1,1],
@@ -377,6 +376,11 @@ class Game:
         self.found_secret_treasure = False 
         self.defeated_secret_boss = False 
 
+        # タイムアタック関連変数
+        self.is_time_attack_mode = False
+        self.game_start_time = 0 # フレーム数で記録
+        self.game_end_time = 0   # フレーム数で記録
+
 
         self.camera_x = float(self.player.x - SCREEN_WIDTH / 2)
         self.camera_y = float(self.player.y - SCREEN_HEIGHT / 2)
@@ -464,7 +468,7 @@ class Game:
         if is_secret_boss: 
             enemy_name = "隠しボス：冥府の番人" 
             cur_hp = self.player.max_hp * 2 
-            cur_atk = self.player.attack_power + 5 
+            cur_atk = 10 
             print("DEBUG: Secret Boss appeared!")
         else:
             cur_hp = base_hp+self.enemies_defeated_count*hp_inc
@@ -496,7 +500,9 @@ class Game:
         self.scene = SCENE_CLEAR
         self.game_clear_phase = 0
         self.game_clear_message_timer = 300
-        # pyxel.stop()
+        # タイムアタックモードなら終了時間を記録
+        if self.is_time_attack_mode:
+            self.game_end_time = pyxel.frame_count
 
     def add_damage_text(self, value, x, y, color=8): self.damage_texts.append(DamageText(value, x, y, color))
     def update_camera_map(self):
@@ -523,6 +529,12 @@ class Game:
     def update_title_scene(self):
         if pyxel.btnp(pyxel.KEY_Z) or pyxel.btnp(pyxel.KEY_RETURN) or pyxel.btnp(pyxel.GAMEPAD1_BUTTON_A):
             self.scene = SCENE_OPENING
+            # 通常開始時はタイムアタックモードではない
+            self.is_time_attack_mode = False
+        elif pyxel.btnp(pyxel.KEY_X) or pyxel.btnp(pyxel.GAMEPAD1_BUTTON_Y): # Xキーでタイムアタック開始
+            self.scene = SCENE_OPENING
+            self.is_time_attack_mode = True
+            self.game_start_time = pyxel.frame_count # タイムアタック開始時間を記録
 
     def update_opening_scene(self):
         # ユーザーがZキーまたはAボタンを押したらマップシーンへ遷移
@@ -542,7 +554,8 @@ class Game:
                 pcx, pcy = self.player.x + self.player.sprite_w / 2, self.player.y + self.player.sprite_h / 2
                 for npc in self.npcs:
                     ncx, ncy = npc.x + npc.sprite_w / 2, npc.y + npc.sprite_h / 2
-                    if (pcx - ncx)**2 + (pcy - ncy)**2 < (TILE_SIZE * 1.8)**2:
+                    # ppy is not defined -> pcy
+                    if (pcx - ncx)**2 + (pcy - ncy)**2 < (TILE_SIZE * 1.8)**2: 
                         self.message_to_display = npc.message; self.message_timer = 240
                         if npc.is_secret: 
                             self.found_secret_npc = True
@@ -591,6 +604,9 @@ class Game:
         self.battle_sub_scene_timer -= 1
         # ゲームオーバー後は広告シーンへ
         if self.battle_sub_scene_timer <= 0 or pyxel.btnp(pyxel.KEY_Z) or pyxel.btnp(pyxel.GAMEPAD1_BUTTON_A): 
+            # タイムアタックモードなら終了時間を記録 (ゲームオーバー時)
+            if self.is_time_attack_mode:
+                self.game_end_time = pyxel.frame_count
             self.scene = SCENE_AD
             self.ad_timer = AD_DISPLAY_TIME
 
@@ -625,18 +641,29 @@ class Game:
             # 裏ボスの出現タイルを壁にリセット (次回のプレイで再度出現させるため)
             self.game_map_data[FIXED_BOSS_SPAWN_TILE_Y][FIXED_BOSS_SPAWN_TILE_X] = TILE_SECRET_BOSS_SPAWN 
 
+            # タイムアタック関連変数もリセット
+            self.is_time_attack_mode = False
+            self.game_start_time = 0
+            self.game_end_time = 0
+
 
     def draw_title_scene(self):
         pyxel.camera(0,0); pyxel.cls(1)
         title_text = "陽石の呪い"; start_text = "Z または Enter キーで開始" 
+        time_attack_text = "Xキーでタイムアタック開始" 
+        
         # len(text) * pyxel.FONT_WIDTH は半角文字基準の幅なので、全角文字を含むと中央寄せがずれる可能性がある
         title_w = len(title_text) * pyxel.FONT_WIDTH
         start_w = len(start_text) * pyxel.FONT_WIDTH
+        time_attack_w = len(time_attack_text) * pyxel.FONT_WIDTH 
         
         # フォント指定
         pyxel.text(SCREEN_WIDTH/2-title_w/2,SCREEN_HEIGHT/2-30,title_text,10, font=self.loaded_custom_font)
         pyxel.text(SCREEN_WIDTH/2-title_w/2+1,SCREEN_HEIGHT/2-30+1,title_text,1, font=self.loaded_custom_font)
         if pyxel.frame_count%40<20: pyxel.text(SCREEN_WIDTH/2-start_w/2,SCREEN_HEIGHT/2+20,start_text,7, font=self.loaded_custom_font)
+        # タイムアタック開始の表示
+        pyxel.text(SCREEN_WIDTH/2-time_attack_w/2,SCREEN_HEIGHT/2+40,time_attack_text,6, font=self.loaded_custom_font)
+
 
     def draw_opening_scene(self):
         pyxel.camera(0,0); pyxel.cls(0); 
@@ -785,37 +812,61 @@ class Game:
         pyxel.camera(0,0)
         pyxel.cls(0) # 黒背景
         
-        # 広告メッセージの描画
-        current_y = SCREEN_HEIGHT / 2 - (len(self.ad_message_lines) * 10) / 2 # 行数と行の高さ10で中央寄せ
-        for line in self.ad_message_lines:
-            # len(text) * pyxel.FONT_WIDTH は半角文字基準の幅なので、全角文字を含むと中央寄せがずれる可能性がある
-            text_w = len(line) * pyxel.FONT_WIDTH 
-            pyxel.text(SCREEN_WIDTH/2 - text_w/2, current_y, line, 7, font=self.loaded_custom_font)
-            current_y += 10 # 次の行へ
-
-        # 隠し要素発見時のメッセージ
-        # 隠しNPC
-        if self.found_secret_npc:
-            secret_npc_msg = "あなたは迷宮の秘密の１つを解き明かした！"
-            secret_npc_w = len(secret_npc_msg) * pyxel.FONT_WIDTH
-            pyxel.text(SCREEN_WIDTH/2 - secret_npc_w/2, current_y + 20, secret_npc_msg, 10, font=self.loaded_custom_font)
-            current_y += 10 # 次の隠しメッセージのためにY座標をずらす
+        # 表示する全メッセージを格納するリスト
+        display_lines_data = [] # 各要素は (テキスト, 色) のタプル
         
-        # 隠し宝箱
+        # 通常広告メッセージを追加
+        for line in self.ad_message_lines:
+            display_lines_data.append((line, 7)) # デフォルトは白
+
+        # 隠し要素メッセージを追加 (それぞれ前に空行を挿入して見やすくする)
+        # 空行もリストに追加し、描画時に色を指定しないことで背景色で表示させる
+        if self.found_secret_npc:
+            display_lines_data.append(("", 0)) # 空行
+            display_lines_data.append(("あなたは迷宮の秘密を知った！", 10)) # 緑
+        
         if self.found_secret_treasure:
-            secret_treasure_msg = "隠された力が、あなたに宿った！"
-            secret_treasure_w = len(secret_treasure_msg) * pyxel.FONT_WIDTH
-            pyxel.text(SCREEN_WIDTH/2 - secret_treasure_w/2, current_y + 30, secret_treasure_msg, 9, font=self.loaded_custom_font)
-            current_y += 10
+            display_lines_data.append(("", 0)) # 空行
+            display_lines_data.append(("隠された力が、あなたに宿った！", 9)) # オレンジ
 
-        # 隠しボス撃破
         if self.defeated_secret_boss:
-            secret_boss_msg = "伝説の冥府の番人を打ち破った！"
-            secret_boss_w = len(secret_boss_msg) * pyxel.FONT_WIDTH
-            pyxel.text(SCREEN_WIDTH/2 - secret_boss_w/2, current_y + 40, secret_boss_msg, 11, font=self.loaded_custom_font)
+            display_lines_data.append(("", 0)) # 空行
+            display_lines_data.append(("伝説の冥府の番人を打ち破った！", 11)) # 黄色
+
+        # タイムアタック結果を追加
+        if self.is_time_attack_mode and self.game_end_time > 0:
+            play_time_frames = self.game_end_time - self.game_start_time
+            play_time_seconds = play_time_frames / 60.0
+            
+            # 分と秒に変換
+            minutes = int(play_time_seconds // 60)
+            seconds = play_time_seconds % 60.0
+            
+            display_lines_data.append(("", 0)) # 空行
+            display_lines_data.append(("タイムアタッククリア！", 6)) # 明るい茶色
+            display_lines_data.append((f"タイム: {minutes}分{seconds:.2f}秒", 6))
 
 
-        # "PRESS Z TO SKIP" の点滅表示
+        # フォントの高さを固定値10として扱う
+        # BDFフォントは行間を含む高さがデフォルト8pxのPyxelフォントとは異なる場合があるため、
+        # 見た目を調整するために10pxなどを使うことが多い
+        font_line_height = 10 
+        
+        # 全てのメッセージの合計ピクセル高さを計算
+        total_text_height = len(display_lines_data) * font_line_height 
+
+        # 画面中央に配置するための開始Y座標を計算
+        current_y = (SCREEN_HEIGHT - total_text_height) // 2
+        
+        # 各メッセージを描画
+        for line_text, line_color in display_lines_data:
+            text_w = len(line_text) * pyxel.FONT_WIDTH # 半角文字基準の幅 (全角文字を含むと中央寄せがずれる可能性あり)
+            
+            pyxel.text(SCREEN_WIDTH/2 - text_w/2, current_y, line_text, line_color, font=self.loaded_custom_font)
+            current_y += font_line_height # 次の行のY座標を更新
+
+
+        # "PRESS Z TO SKIP" の点滅表示は常に画面下部に固定
         if pyxel.frame_count % 30 < 15:
             skip_text = "- Zキーでスキップ -"
             # len(text) * pyxel.FONT_WIDTH は半角文字基準の幅なので、全角文字を含むと中央寄せがずれる可能性がある
